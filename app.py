@@ -194,7 +194,7 @@ if st.button("🔍 Dự đoán nguy cơ bệnh tim"):
 
     if prediction[0]==0:
 
-        st.error(f"⚠️ Nguy cơ mắc bệnh tim: {probability*100:.1f}%")
+       st.error(f"⚠️ Nguy cơ mắc bệnh tim: {(1-probability)*100:.1f}%")
 
     else:
 
