@@ -8,8 +8,9 @@ import seaborn as sns
 # =============================
 # CẤU HÌNH TRANG
 # =============================
+
 st.set_page_config(
-    page_title="Heart Disease AI - Hồ Duy Khánh",
+    page_title="Heart Disease AI",
     page_icon="❤️",
     layout="wide"
 )
@@ -17,261 +18,233 @@ st.set_page_config(
 # =============================
 # LOAD MODEL + DATASET
 # =============================
-@st.cache_resource
-def load_assets():
-    try:
-        model = pickle.load(open("heart_model.pkl", "rb"))
-        df = pd.read_csv("heart.csv")
-        return model, df
-    except:
-        return None, None
 
-model, df = load_assets()
-
-if model is None or df is None:
-    st.error("Không tìm thấy file heart_model.pkl hoặc heart.csv")
-    st.stop()
+model = pickle.load(open("heart_model.pkl","rb"))
+df = pd.read_csv("heart.csv")
 
 # =============================
 # SIDEBAR
 # =============================
+
 st.sidebar.title("🫀 Heart Disease AI")
 
-st.sidebar.info("""
-**ĐỒ ÁN MACHINE LEARNING**
+st.sidebar.info(
+"""
+Ứng dụng **Machine Learning** dự đoán nguy cơ mắc bệnh tim.
 
-Sinh viên: **Hồ Duy Khánh**
-
-Đề tài: **Dự đoán nguy cơ bệnh tim**
-
-Model: **Logistic Regression**
-""")
+Sinh viên: (Điền tên của bạn)  
+Môn học: Machine Learning  
+Model: Logistic Regression  
+Dataset: Heart Disease Dataset
+"""
+)
 
 st.sidebar.markdown("---")
-
-show_analysis = st.sidebar.checkbox("Hiển thị phân tích dữ liệu", True)
+st.sidebar.write("Dashboard phân tích dữ liệu")
 
 # =============================
 # HEADER
 # =============================
+
 st.title("❤️ Hệ thống dự đoán bệnh tim bằng AI")
 
-st.write("Nhập thông tin bệnh nhân để hệ thống AI dự đoán nguy cơ mắc bệnh.")
+st.write(
+"""
+Nhập thông tin bệnh nhân để hệ thống AI dự đoán nguy cơ mắc bệnh tim.
+"""
+)
 
 st.divider()
 
 # =============================
 # INPUT FORM
 # =============================
+
 col1, col2 = st.columns(2)
 
 with col1:
 
-    age = st.slider("1. Tuổi", 20, 80, 35)
+    age = st.slider("Tuổi",20,80)
 
     sex = st.selectbox(
-        "2. Giới tính",
-        ["Nữ", "Nam"]
+        "Giới tính",
+        ["Nữ","Nam"]
     )
 
     cp = st.selectbox(
-        "3. Loại đau ngực",
+        "Loại đau ngực",
         [
-            "Không có triệu chứng",
-            "Đau thắt ngực điển hình",
-            "Đau thắt ngực không điển hình",
-            "Đau không do tim"
+        "Đau thắt ngực điển hình",
+        "Đau thắt ngực không điển hình",
+        "Đau không do tim",
+        "Không có triệu chứng"
         ]
     )
 
-    trestbps = st.slider(
-        "4. Huyết áp nghỉ (mm Hg)",
-        90, 200, 120
-    )
+    trestbps = st.slider("Huyết áp nghỉ (mm Hg)",90,200)
 
-    chol = st.slider(
-        "5. Cholesterol (mg/dl)",
-        100, 400, 200
-    )
+    chol = st.slider("Cholesterol (mg/dl)",100,400)
 
     fbs = st.selectbox(
-        "6. Đường huyết > 120 mg/dl",
-        ["Không", "Có"]
+        "Đường huyết >120 mg/dl",
+        ["Không","Có"]
     )
 
 with col2:
 
     restecg = st.selectbox(
-        "7. Kết quả điện tâm đồ",
+        "Kết quả điện tâm đồ",
         [
-            "Bình thường",
-            "Bất thường sóng ST-T",
-            "Phì đại thất trái"
+        "Bình thường",
+        "Bất thường ST-T",
+        "Phì đại thất trái"
         ]
     )
 
-    thalach = st.slider(
-        "8. Nhịp tim tối đa",
-        70, 210, 150
-    )
+    thalach = st.slider("Nhịp tim tối đa",70,210)
 
     exang = st.selectbox(
-        "9. Đau thắt ngực khi vận động",
-        ["Không", "Có"]
+        "Đau thắt ngực khi vận động",
+        ["Không","Có"]
     )
 
-    oldpeak = st.slider(
-        "10. Oldpeak (ST depression)",
-        0.0, 6.0, 0.0, 0.1
-    )
+    oldpeak = st.slider("Oldpeak (ST depression)",0.0,6.0)
 
     slope = st.selectbox(
-        "11. Độ dốc ST",
-        ["Giảm", "Phẳng", "Tăng"]
+        "Độ dốc ST",
+        ["Tăng","Phẳng","Giảm"]
     )
 
-    ca = st.selectbox(
-        "12. Số mạch máu chính",
-        [0,1,2,3]
-    )
+    ca = st.selectbox("Số mạch máu chính",[0,1,2,3])
 
     thal = st.selectbox(
-        "13. Thalassemia",
+        "Thalassemia",
         [
-            "Bình thường",
-            "Khiếm khuyết cố định",
-            "Khiếm khuyết có thể đảo ngược"
+        "Bình thường",
+        "Khiếm khuyết cố định",
+        "Khiếm khuyết có thể đảo ngược"
         ]
     )
 
 # =============================
-# MAPPING DỮ LIỆU
+# CHUYỂN DỮ LIỆU
 # =============================
 
-input_sex = 1 if sex == "Nam" else 0
+sex = 1 if sex=="Nam" else 0
 
 cp_map = {
-    "Không có triệu chứng":0,
-    "Đau thắt ngực điển hình":1,
-    "Đau thắt ngực không điển hình":2,
-    "Đau không do tim":3
+"Đau thắt ngực điển hình":0,
+"Đau thắt ngực không điển hình":1,
+"Đau không do tim":2,
+"Không có triệu chứng":3
 }
 
-input_cp = cp_map[cp]
+cp = cp_map[cp]
 
-input_fbs = 1 if fbs == "Có" else 0
+fbs = 1 if fbs=="Có" else 0
 
 restecg_map = {
-    "Bình thường":0,
-    "Bất thường sóng ST-T":1,
-    "Phì đại thất trái":2
+"Bình thường":0,
+"Bất thường ST-T":1,
+"Phì đại thất trái":2
 }
 
-input_restecg = restecg_map[restecg]
+restecg = restecg_map[restecg]
 
-input_exang = 1 if exang == "Có" else 0
+exang = 1 if exang=="Có" else 0
 
 slope_map = {
-    "Giảm":0,
-    "Phẳng":1,
-    "Tăng":2
+"Tăng":0,
+"Phẳng":1,
+"Giảm":2
 }
 
-input_slope = slope_map[slope]
-
-# ⚠️ FIX QUAN TRỌNG
-# dataset chuẩn dùng 3,6,7
+slope = slope_map[slope]
 
 thal_map = {
-    "Bình thường":3,
-    "Khiếm khuyết cố định":6,
-    "Khiếm khuyết có thể đảo ngược":7
+"Bình thường":0,
+"Khiếm khuyết cố định":1,
+"Khiếm khuyết có thể đảo ngược":2
 }
 
-input_thal = thal_map[thal]
-
-# =============================
-# DỰ ĐOÁN
-# =============================
+thal = thal_map[thal]
 
 st.divider()
 
-if st.button("🔍 Dự đoán ngay"):
+# =============================
+# PREDICTION
+# =============================
 
-    data = np.array([[
+if st.button("🔍 Dự đoán nguy cơ bệnh tim"):
 
-        age,
-        input_sex,
-        input_cp,
-        trestbps,
-        chol,
-        input_fbs,
-        input_restecg,
-        thalach,
-        input_exang,
-        oldpeak,
-        input_slope,
-        ca,
-        input_thal
-
-    ]])
+    data = np.array([[age,sex,cp,trestbps,chol,fbs,
+                      restecg,thalach,exang,oldpeak,
+                      slope,ca,thal]])
 
     prediction = model.predict(data)
 
-    prob = model.predict_proba(data)[0][1]
+    if hasattr(model,"predict_proba"):
+        probability = model.predict_proba(data)[0][1]
+    else:
+        probability = 0.5
 
     st.subheader("Kết quả phân tích")
 
-    if prediction[0] == 1:
+    st.progress(int(probability*100))
 
-        st.error(f"⚠️ Nguy cơ mắc bệnh tim cao: {prob*100:.1f}%")
+    if prediction[0]==1:
 
-        st.progress(prob)
+        st.error(f"⚠️ Nguy cơ mắc bệnh tim: {probability*100:.1f}%")
 
     else:
 
-        st.success(f"✅ Nguy cơ thấp: {(1-prob)*100:.1f}%")
+        st.success(f"✅ Nguy cơ thấp: {(1-probability)*100:.1f}%")
 
-        st.progress(prob)
+st.divider()
 
 # =============================
-# PHÂN TÍCH DATASET
+# DATA ANALYSIS
 # =============================
 
-if show_analysis:
+st.subheader("📊 Phân tích Dataset")
 
-    st.divider()
+col3, col4 = st.columns(2)
 
-    st.subheader("📊 Phân tích dữ liệu")
+with col3:
 
-    c1, c2 = st.columns(2)
+    st.write("Phân bố bệnh tim")
 
-    with c1:
+    fig, ax = plt.subplots()
 
-        fig1, ax1 = plt.subplots()
+    df["target"].value_counts().plot(kind="bar",ax=ax)
 
-        sns.countplot(
-            x='target',
-            data=df,
-            ax=ax1,
-            palette='Set2'
-        )
+    ax.set_xlabel("Target")
+    ax.set_ylabel("Count")
 
-        ax1.set_title("Tỉ lệ mắc bệnh tim")
+    st.pyplot(fig)
 
-        st.pyplot(fig1)
+with col4:
 
-    with c2:
+    st.write("Phân bố độ tuổi")
 
-        fig2, ax2 = plt.subplots()
+    fig2, ax2 = plt.subplots()
 
-        sns.histplot(
-            df['age'],
-            kde=True,
-            ax=ax2,
-            color='blue'
-        )
+    df["age"].hist(ax=ax2)
 
-        ax2.set_title("Phân bố độ tuổi")
+    ax2.set_xlabel("Age")
 
-        st.pyplot(fig2)
+    st.pyplot(fig2)
+
+# =============================
+# HEATMAP
+# =============================
+
+st.subheader("🔥 Correlation Heatmap")
+
+fig3, ax3 = plt.subplots(figsize=(10,6))
+
+sns.heatmap(df.corr(),annot=False,cmap="coolwarm",ax=ax3)
+
+st.pyplot(fig3)
+
+st.caption("Machine Learning Project - Heart Disease Prediction")
