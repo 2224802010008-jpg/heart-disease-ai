@@ -192,7 +192,7 @@ if st.button("🔍 Dự đoán nguy cơ bệnh tim"):
 
     st.progress(int(probability*100))
 
-    if prediction[0]==1:
+    if prediction[0]==0:
 
         st.error(f"⚠️ Nguy cơ mắc bệnh tim: {probability*100:.1f}%")
 
