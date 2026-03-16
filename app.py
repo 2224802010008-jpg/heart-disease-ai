@@ -32,7 +32,7 @@ st.sidebar.info(
 """
 Ứng dụng **Machine Learning** dự đoán nguy cơ mắc bệnh tim.
 
-Sinh viên: (Điền tên của bạn)  
+Sinh viên: Hồ Duy Khánh 
 Môn học: Machine Learning  
 Model: Logistic Regression  
 Dataset: Heart Disease Dataset
